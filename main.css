@@ -1,0 +1,15 @@
+body {
+  padding-top: 70px;
+  padding-bottom: 30px;
+}
+
+#root {
+  display: flex;
+}
+
+.lane.target {
+  outline: 3px dashed #EEE;
+}
+
+.box {
+}

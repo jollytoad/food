@@ -1,0 +1,28 @@
+{
+  "name": "ooo",
+  "version": "1.0.0",
+  "description": "A food management app using jspm and fluxlet",
+  "scripts": {
+    "start": "browser-sync start --server --port 3030 --files '**'"
+  },
+  "devDependencies": {
+    "browser-sync": "^2.9.12",
+    "jspm": "^0.16.14"
+  },
+  "jspm": {
+    "dependencies": {
+      "fluxlet": "github:fluxlet/fluxlet@master",
+      "fluxlet-immutable": "github:fluxlet/fluxlet-immutable@master",
+      "jquery": "github:components/jquery@^2.1.4",
+      "uuid": "npm:uuid@^2.0.1",
+      "virtual-dom": "npm:virtual-dom@^2.1.1"
+    },
+    "devDependencies": {
+      "babel": "npm:babel-core@^5.8.24",
+      "babel-runtime": "npm:babel-runtime@^5.8.24",
+      "core-js": "npm:core-js@^1.1.4"
+    }
+  },
+  "author": "Mark Gibson",
+  "license": "MIT"
+}
