@@ -13,3 +13,8 @@ body {
 
 .box {
 }
+
+.box-item-toggle {
+  margin: -7px -12px;
+  border-color: transparent;
+}

@@ -7,8 +7,9 @@ import patch from 'virtual-dom/patch'
 import { v1 as uuid } from 'uuid'
 import { root, initRoot } from './templates'
 import { render, whenNotRendering } from './render-utils'
-import { mapIf } from './map2'
-import { bindEditing, bindDragging, bindReady } from './bindings'
+import { map, mapIf } from './map2'
+import { bindEditing, bindDragging, bindToggles, bindReady } from './bindings'
+import yaml from 'js-yaml'
 
 // # Setup
 
@@ -24,12 +25,16 @@ export function setup() {
       cancelEdit,
       targetLane,
       dragStart,
-      drop
+      drop,
+      expand,
+      collapse
     })
     .calculations({
+      parseItems
+    },{
       addEmptyItems
     },{
-      renderBoxes,
+      renderBoxes
     },{
       generateViewDiff
     })
@@ -39,6 +44,7 @@ export function setup() {
     .init(
       bindEditing,
       bindDragging,
+      bindToggles,
       bindReady
     )
 }
@@ -59,7 +65,8 @@ const initialState = {
     },
     target: {
       lane: null
-    }
+    },
+    expand: {}
   },
   view: {
     vdom: initRoot(),
@@ -76,65 +83,11 @@ const createBox = (id) => ({
 
 const createItem = (id) => ({
   id,
-  title: null
+  title: null,
+  content: null,
+  data: {}
 })
 
-// ## Bindings
-
-// const ENTER_KEY = 13
-// const ESC_KEY = 27
-//
-// function bindEditing(dispatch) {
-//   $(document)
-//     .on("click", "#add", () => { dispatch.addBox(uuid()) })
-//     .on("click", ".editable[data-path]", passData("path", dispatch.startEdit))
-//     .on("keydown", ".edit", forKey(ESC_KEY, dispatch.cancelEdit))
-//     .on("keydown", ".edit", forKey(ENTER_KEY, dispatch.saveEdit))
-//     .on("keyup", ".edit", passVal(dispatch.updateEdit))
-//     .on("blur", ".edit", whenNotRendering(() => dispatch.saveEdit()))
-// }
-//
-// function bindDragging(dispatch) {
-//   $(document)
-//     .on("dragstart", ".box", pass(dispatch.dragStart, data('path'), dataTransfer))
-//     .on("dragenter", ".lane", preventDefault(passData("lane", dispatch.targetLane)))
-//     .on("drop", ".lane", preventDefault(passData("lane", dispatch.targetLane)))
-//     .on("dragend", ".box", () => { dispatch.targetLane(null) })
-// }
-//
-// function bindReady(dispatch) {
-//   $(() => {
-//     // Do nothing atm
-//   })
-// }
-//
-// const forKey = (code, dispatcher) => (event) => {
-//   if (event.which === code) {
-//     dispatcher()
-//   }
-// }
-//
-// const passVal = (dispatcher) => (event) => {
-//   dispatcher($(event.target).val())
-// }
-//
-// const passData = (dataKey, dispatcher, ...args) => (event) => {
-//   dispatcher($(event.target).closest(`[data-${dataKey}]`).data(dataKey), ...args.map())
-// }
-//
-// const passData = (dataKey, dispatcher, ...args) => (event) => {
-//   dispatcher($(event.target).closest(`[data-${dataKey}]`).data(dataKey), ...args.map())
-// }
-//
-// const preventDefault = (handler) => (event) => {
-//   event.preventDefault()
-//   handler(event)
-// }
-//
-// const startDrag = (event) => {
-//   const id = $(event.target).closest('[data-id]').data('id')
-//   event.dataTransfer.setData('application/json', { box: id })
-// }
 
 // ## Actions
 
@@ -208,6 +161,10 @@ const findBoxPosition = (id, layout) => {
   return [layout.findIndex(lane => (b = lane.findIndex(i => i === id)) >= 0), b]
 }
 
+const toggle = value => id => update(['trans','expand',id], value)
+const expand = toggle(true)
+const collapse = toggle(false)
+
 // ## Predicates
 // For use in _when_ clauses of calculations and side-effects
 // (state, prev) -> boolean
@@ -226,6 +183,15 @@ const allOf = (...predicates) => (...args) => predicates.every(when => when(...a
 const not = (predicate) => (...args) => !predicate(...args)
 
 // ## Calculations
+
+const parseItems = {
+  when: boxesChanged,
+  then: update("model.boxes", map(
+    update("items", map(
+      update("data", (data, {content}) => yaml.safeLoad(content))
+    ))
+  ))
+}
 
 const addEmptyItems = {
   when: boxesChanged,

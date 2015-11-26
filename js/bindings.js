@@ -27,6 +27,12 @@ export function bindDragging({ dragStart, targetLane, drop }) {
     .on("dragend", ".draggable", dispatch(targetLane, null))
 }
 
+export function bindToggles({ expand, collapse }) {
+  $(document)
+    .on("click", ".expander", dispatch(expand, data('id'), preventDefault))
+    .on("click", ".collapser", dispatch(collapse, data('id'), preventDefault))
+}
+
 export function bindReady() {
   $(() => {
     // Do nothing atm
