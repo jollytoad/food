@@ -18,6 +18,8 @@ export function setup() {
   fluxlet("ooo")
     .state(initialState)
     .actions({
+      begin,
+      setModel,
       addBox,
       startEdit,
       updateEdit,
@@ -39,6 +41,8 @@ export function setup() {
       generateViewDiff
     })
     .sideEffects({
+      loadModel,
+      saveModel,
       patchDOM
     })
     .init(
@@ -52,6 +56,7 @@ export function setup() {
 // # Initial State
 
 const initialState = {
+  begin: false,
   model: {
     boxes: {},
     layout: [
@@ -90,6 +95,10 @@ const createItem = (id) => ({
 
 
 // ## Actions
+
+const begin = () => update("begin", true)
+
+const setModel = (model) => update("model", model)
 
 const addBox = (id, index = 0) => chain(
   update(['model','boxes',id], createBox(id)),
@@ -213,6 +222,24 @@ const generateViewDiff = {
 
 // ## Request Side Effects
 
+const loadModel = {
+  when: (state, prev) => state.begin && !prev.begin,
+  then: (s, p, dispatch) => {
+    const model = localStorage.getItem("model")
+    if (model) {
+      setTimeout(() => {
+        dispatch.setModel(JSON.parse(model))
+      }, 0)
+    }
+  }
+}
+
+const saveModel = {
+  when: modelChanged,
+  then: ({model}) => {
+    localStorage.setItem("model", JSON.stringify(model))
+  }
+}
 
 // ## Rendering Side Effects
 

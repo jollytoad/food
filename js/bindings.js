@@ -33,9 +33,9 @@ export function bindToggles({ expand, collapse }) {
     .on("click", ".collapser", dispatch(collapse, data('id'), preventDefault))
 }
 
-export function bindReady() {
+export function bindReady({ begin }) {
   $(() => {
-    // Do nothing atm
+    begin()
   })
 }
 
