@@ -13,7 +13,7 @@ export function bindEditing({ addBox, startEdit, updateEdit, cancelEdit, saveEdi
     .on("click", "#add", dispatch(addBox, () => uuid()))
     .on("click", ".editable[data-path]", dispatch(startEdit, data('path')))
     .on("keydown", ".edit", dispatchIf(keyIs(ESC_KEY), cancelEdit))
-    .on("keydown", ".edit", dispatchIf(keyIs(ENTER_KEY), saveEdit))
+    .on("keydown", ".edit:not(textarea)", dispatchIf(keyIs(ENTER_KEY), saveEdit))
     .on("keyup", ".edit", dispatch(updateEdit, val))
     .on("blur", ".edit", dispatchIf(notRendering, saveEdit))
 }

@@ -7,7 +7,7 @@ import patch from 'virtual-dom/patch'
 import { v1 as uuid } from 'uuid'
 import { root, initRoot } from './templates'
 import { render, whenNotRendering } from './render-utils'
-import { map, mapIf } from './map2'
+import { map, mapIf, mapFrom } from './map2'
 import { bindEditing, bindDragging, bindToggles, bindReady } from './bindings'
 import yaml from 'js-yaml'
 
@@ -35,6 +35,8 @@ export function setup() {
       parseItems
     },{
       addEmptyItems
+    }, {
+      totals
     },{
       renderBoxes
     },{
@@ -71,7 +73,8 @@ const initialState = {
     target: {
       lane: null
     },
-    expand: {}
+    expand: {},
+    totals: {}
   },
   view: {
     vdom: initRoot(),
@@ -196,8 +199,8 @@ const not = (predicate) => (...args) => !predicate(...args)
 const parseItems = {
   when: boxesChanged,
   then: update("model.boxes", map(
-    update("items", map(
-      update("data", (data, {content}) => yaml.safeLoad(content))
+    update("items", mapIf(({content}) => typeof content === 'string',
+      update("content", (data, {content}) => yaml.safeLoad(content))
     ))
   ))
 }
@@ -207,6 +210,23 @@ const addEmptyItems = {
   then: update("model.boxes", mapIf(
     ({items}) => items.length === 0 || items[items.length-1].title,
     update('items', items => items.concat(createItem(uuid())))
+  ))
+}
+
+const totals = {
+  when: boxesChanged,
+  then: update("trans.totals", mapFrom("model.boxes", box =>
+    box.items.reduce((total, {content}) => {
+      if (content && typeof content === 'object') {
+        Object.getOwnPropertyNames(content).forEach(key => {
+          const num = +content[key]
+          if (!isNaN(num)) {
+            total[key] = (+total[key] || 0) + num
+          }
+        })
+      }
+      return total
+    }, {})
   ))
 }
 

@@ -30,7 +30,19 @@ const box = (t, path, box) =>
 const boxItems = (t, path, box) =>
   <ul class="list-group">
     {box.items.map(boxItem(t, [...path, 'items']))}
+    {boxTotals(t, path, box)}
   </ul>
+
+const boxTotals = (t, path, box) =>
+  <li class="list-group-item form-horizontal">
+    {mapObj(t.totals[box.id], boxTotal(t, path, box))}
+  </li>
+
+const boxTotal = (t, path, box) => (value, name) =>
+  <div class="form-group">
+    <label class="col-sm-6 control-label">{name}</label>
+    <div class="col-sm-6"><p class="form-control-static">{value}</p></div>
+  </div>
 
 const boxItem = (t, path) => (item, index) => {
   const expand = expanded(t, item.id)
@@ -61,12 +73,25 @@ const boxItemContent = (t, path, content) =>
   </div>
 
 const boxItemTextArea = (t, path, content, edit) =>
-  <textarea class={`form-control ${edit ? 'edit' : 'editable'}`} readOnly={!edit} data-path={makePath(path)}>
-    {content}
+  <textarea class={`form-control ${edit ? 'edit' : 'editable'}`} readOnly={!edit} data-path={makePath(path)}
+    placeholder="Enter yaml data here...">
+    {edit ? t.edit.value : content}
   </textarea>
 
-const boxItemForm = (t, path, content, edit) =>
-  <div>TODO</div>
+const boxItemForm = (t, path, content) =>
+  <div class="form-horizontal">
+    {mapObj(content, boxItemFormEntry(t, path))}
+  </div>
+
+const boxItemFormEntry = (t, path) => (value, name) =>
+  <div class="form-group">
+    <label class="col-sm-6 control-label">{name}</label>
+    <div class="col-sm-6">
+      {editing(t, path, name) ?
+        <input class="form-control edit" type="text" value={t.edit.value}/> :
+        <p class="form-control-static editable" data-path={makePath(path, name)}>{value}</p>}
+    </div>
+  </div>
 
 const toggleBtn = expand =>
   <button class={`btn btn-default pull-right box-item-toggle ${expand ? 'collapser' : 'expander'}`}>
@@ -84,3 +109,5 @@ const makePath = (path, ...tail) => path.concat(tail).join('.')
 
 const arrEq = (path1, path2) => path1 != null && path2 != null &&
   path1.length === path2.length && path1.every((e, i) => e == path2[i])
+
+const mapObj = (obj, iter) => Object.getOwnPropertyNames(obj).map(key => iter(obj[key], key, obj))
